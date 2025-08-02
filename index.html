@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honeycomb Hexagons</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #D3D3D3;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #honeycomb-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .hexagon-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .hexagon-row:nth-child(2) {
+            margin-left: var(--hex-offset);
+            margin-top: var(--hex-row-offset);
+        }
+
+        .hexagon-row:nth-child(3) {
+            margin-top: var(--hex-row-offset);
+        }
+
+        .hexagon {
+            width: var(--hex-size);
+            height: var(--hex-size);
+            background-color: #4682B4;
+            margin: 2px;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .hexagon.highlighted {
+            background-color: #808080;
+        }
+
+        .hexagon.last-highlighted {
+            background-color: #90EE90;
+        }
+
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #4682B4;
+        }
+
+        .instructions p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="honeycomb-container">
+        <div class="hexagon-row">
+            <div class="hexagon" data-index="0"></div>
+            <div class="hexagon" data-index="1"></div>
+            <div class="hexagon" data-index="2"></div>
+        </div>
+        <div class="hexagon-row">
+            <div class="hexagon" data-index="3"></div>
+            <div class="hexagon" data-index="4"></div>
+            <div class="hexagon" data-index="5"></div>
+            <div class="hexagon" data-index="6"></div>
+        </div>
+        <div class="hexagon-row">
+            <div class="hexagon" data-index="7"></div>
+            <div class="hexagon" data-index="8"></div>
+            <div class="hexagon" data-index="9"></div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>Controls</h3>
+        <p><strong>Single click</strong> anywhere on screen or <strong>single key press</strong>: Highlights a random unhighlighted hexagon</p>
+        <p><strong>Double click</strong> or <strong>double key press</strong> (within 300ms): Resets all hexagons</p>
+        <p>When all hexagons are highlighted, any single action will reset all hexagons</p>
+    </div>
+
+    <script>
+        // Color constants
+        const COLORS = {
+            BACKGROUND: '#D3D3D3',
+            NORMAL_HEXAGON: '#4682B4',
+            HIGHLIGHTED_HEXAGON: '#808080',
+            LAST_HIGHLIGHTED: '#90EE90'
+        };
+
+        // Timing constant
+        const DOUBLE_CLICK_INTERVAL = 300; // ms
+
+        // Game state
+        let highlightedHexagons = new Set();
+        let lastHighlightedIndex = -1;
+        let lastKeyPressTime = 0;
+        let lastClickTime = 0;
+
+        // Get all hexagons
+        const hexagons = document.querySelectorAll('.hexagon');
+        const totalHexagons = hexagons.length;
+
+        // Calculate hexagon size based on screen dimensions
+        function calculateHexagonSize() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight - 200; // Account for instructions
+            const minDimension = Math.min(screenWidth, screenHeight);
+            const containerSize = minDimension * 0.8;
+            
+            // Calculate size to fit the honeycomb pattern
+            // 4 hexagons in width (middle row) + some spacing
+            const hexSize = Math.floor(containerSize / 5);
+            const hexOffset = 0; // No horizontal offset
+            const hexRowOffset = -hexSize * 0.25; // Overlap rows by 25% of hexagon height
+            
+            document.documentElement.style.setProperty('--hex-size', hexSize + 'px');
+            document.documentElement.style.setProperty('--hex-offset', hexOffset + 'px');
+            document.documentElement.style.setProperty('--hex-row-offset', hexRowOffset + 'px');
+        }
+
+        // Initialize hexagon sizes
+        calculateHexagonSize();
+        window.addEventListener('resize', calculateHexagonSize);
+
+        // Get random unhighlighted hexagon index
+        function getRandomUnhighlightedIndex() {
+            const unhighlighted = [];
+            for (let i = 0; i < totalHexagons; i++) {
+                if (!highlightedHexagons.has(i)) {
+                    unhighlighted.push(i);
+                }
+            }
+            if (unhighlighted.length === 0) return -1;
+            return unhighlighted[Math.floor(Math.random() * unhighlighted.length)];
+        }
+
+        // Get random hexagon index
+        function getRandomIndex() {
+            return Math.floor(Math.random() * totalHexagons);
+        }
+
+        // Highlight hexagon
+        function highlightHexagon(index) {
+            // Remove last-highlighted class from previous hexagon
+            if (lastHighlightedIndex !== -1) {
+                hexagons[lastHighlightedIndex].classList.remove('last-highlighted');
+            }
+            
+            hexagons[index].classList.add('highlighted');
+            hexagons[index].classList.add('last-highlighted');
+            highlightedHexagons.add(index);
+            lastHighlightedIndex = index;
+        }
+
+        // Reset all hexagons
+        function resetAllHexagons() {
+            hexagons.forEach(hex => {
+                hex.classList.remove('highlighted');
+                hex.classList.remove('last-highlighted');
+            });
+            highlightedHexagons.clear();
+            lastHighlightedIndex = -1;
+        }
+
+        // Handle single action (highlight random unhighlighted)
+        function handleSingleAction() {
+            // If all hexagons are highlighted, just reset
+            if (highlightedHexagons.size === totalHexagons) {
+                resetAllHexagons();
+                return;
+            }
+
+            const randomIndex = getRandomUnhighlightedIndex();
+            if (randomIndex !== -1) {
+                highlightHexagon(randomIndex);
+            }
+        }
+
+        // Handle double action (just reset all hexagons)
+        function handleDoubleAction() {
+            resetAllHexagons();
+        }
+
+        // Mouse click handler
+        document.addEventListener('click', function(event) {
+            const currentTime = Date.now();
+            const timeDiff = currentTime - lastClickTime;
+            
+            if (timeDiff <= DOUBLE_CLICK_INTERVAL) {
+                // Double click
+                handleDoubleAction();
+            } else {
+                // Single click
+                handleSingleAction();
+            }
+            
+            lastClickTime = currentTime;
+        });
+
+        // Keyboard handler
+        document.addEventListener('keydown', function(event) {
+            const currentTime = Date.now();
+            const timeDiff = currentTime - lastKeyPressTime;
+            
+            if (timeDiff <= DOUBLE_CLICK_INTERVAL) {
+                // Double key press
+                handleDoubleAction();
+            } else {
+                // Single key press
+                handleSingleAction();
+            }
+            
+            lastKeyPressTime = currentTime;
+        });
+
+        // Prevent default double-click behavior
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
