@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Honeycomb Hexagons</title>
     <style>
         body {
@@ -16,6 +16,11 @@
             justify-content: center;
             min-height: 100vh;
             box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         #honeycomb-container {
@@ -96,8 +101,8 @@
 
     <div class="instructions">
         <h3>Controls</h3>
-        <p><strong>Single click</strong> anywhere on screen or <strong>single key press</strong>: Highlights a random unhighlighted hexagon</p>
-        <p><strong>Double click</strong> or <strong>double key press</strong> (within 300ms): Resets all hexagons</p>
+        <p><strong>Single click/tap</strong> anywhere on screen or <strong>single key press</strong>: Highlights a random unhighlighted hexagon</p>
+        <p><strong>Double click/tap</strong> or <strong>double key press</strong> (within 300ms): Resets all hexagons</p>
         <p>When all hexagons are highlighted, any single action will reset all hexagons</p>
     </div>
 
@@ -118,6 +123,7 @@
         let lastHighlightedIndex = -1;
         let lastKeyPressTime = 0;
         let lastClickTime = 0;
+        let lastTouchTime = 0;
 
         // Get all hexagons
         const hexagons = document.querySelectorAll('.hexagon');
@@ -234,6 +240,24 @@
             }
             
             lastKeyPressTime = currentTime;
+        });
+
+        // Touch handler for mobile devices
+        document.addEventListener('touchend', function(event) {
+            event.preventDefault(); // Prevent default touch behavior
+            
+            const currentTime = Date.now();
+            const timeDiff = currentTime - lastTouchTime;
+            
+            if (timeDiff <= DOUBLE_CLICK_INTERVAL) {
+                // Double tap
+                handleDoubleAction();
+            } else {
+                // Single tap
+                handleSingleAction();
+            }
+            
+            lastTouchTime = currentTime;
         });
 
         // Prevent default double-click behavior
