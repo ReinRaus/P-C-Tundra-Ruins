@@ -77,6 +77,62 @@
         .instructions p {
             margin: 10px 0;
         }
+
+        .help-button {
+            background-color: #4682B4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .help-button:hover {
+            background-color: #5a9bd4;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +160,16 @@
         <p><strong>Single click/tap</strong> anywhere on screen or <strong>single key press</strong>: Highlights a random unhighlighted hexagon</p>
         <p><strong>Double click/tap</strong> or <strong>double key press</strong> (within 300ms): Resets all hexagons</p>
         <p>When all hexagons are highlighted, any single action will reset all hexagons</p>
+        <button class="help-button" onclick="openModal()">HELP</button>
+    </div>
+
+    <!-- Modal window -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3>Random Selection Information</h3>
+            <p>The suggested cells for selection are completely random choices. Your brain chooses non-random sequences and because of this you have to make more moves. A completely random move reduces the total number of moves when there are many such moves.</p>
+        </div>
     </div>
 
     <script>
@@ -263,6 +329,29 @@
         // Prevent default double-click behavior
         document.addEventListener('dblclick', function(event) {
             event.preventDefault();
+        });
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
         });
     </script>
 </body>
